@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ImmersivePoC</string>
+
+    <string-array name="fullscreen_modes">
+        <item>Lean back</item>
+        <item>Immersive</item>
+        <item>Sticky Immersive</item>
+    </string-array>
+
+</resources>
