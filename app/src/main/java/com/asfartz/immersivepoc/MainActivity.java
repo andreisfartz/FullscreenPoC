@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (isAPI30) {
             // Why does this make the app bar transparent, instead of dark (like the app theme is set)
-            getWindow().getDecorView().setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            parentCL.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
                 public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     if (insets.isVisible(/*WindowInsets.Type.systemBars()*/
