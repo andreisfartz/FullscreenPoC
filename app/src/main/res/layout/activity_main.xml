@@ -59,19 +59,19 @@
         android:id="@+id/toggleFullscreenModeBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="112dp"
+        android:layout_marginTop="0dp"
         android:text="Fullscreen mode "
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/topRect" />
 
     <Spinner
         android:id="@+id/fullscreenModeSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -81,12 +81,12 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="72dp"
-        android:text="FULLSCREEN MODE"
-        android:textSize="30sp"
+        android:layout_marginTop="12dp"
+        android:text="FULLSCREEN MODE:"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/rightRect"
-        app:layout_constraintHorizontal_bias="0.475"
+        app:layout_constraintEnd_toStartOf="@+id/fullscreenStatusImageView"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/leftRect"
         app:layout_constraintTop_toBottomOf="@+id/fullscreenModeSpinner" />
 
@@ -94,11 +94,41 @@
         android:id="@+id/fullscreenStatusImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toStartOf="@+id/rightRect"
-        app:layout_constraintHorizontal_bias="0.503"
-        app:layout_constraintStart_toEndOf="@+id/leftRect"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/fullscreenModeSpinner"
         app:srcCompat="@drawable/ic_red_not_fullscreen" />
+
+    <ScrollView
+        android:id="@+id/mScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="5dp"
+        android:layout_marginVertical="5dp"
+        android:background="#C1E8BC"
+        app:layout_constraintBottom_toTopOf="@+id/bottomRect"
+        app:layout_constraintEnd_toStartOf="@+id/rightRect"
+        app:layout_constraintStart_toEndOf="@+id/leftRect"
+        app:layout_constraintTop_toBottomOf="@+id/fullscreenStatusImageView"
+        app:layout_constraintVertical_bias="0.058">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/insetsLogsTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="xxx" />
+
+
+        </LinearLayout>
+    </ScrollView>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

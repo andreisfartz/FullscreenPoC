@@ -15,7 +15,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -30,7 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout parentView;
     private ImageView fullscreenStatus;
     private RelativeLayout topRL, bottomRL, leftRL, rightRL;
+    private ScrollView mScrollView;
     private Spinner fullscreenModeSpinner;
+    private TextView insetsTV;
     private View decorView;
 
     private boolean isAPI30 = false;
@@ -43,15 +47,22 @@ public class MainActivity extends AppCompatActivity {
         bottomRL = findViewById(R.id.bottomRect);
         leftRL = findViewById(R.id.leftRect);
         rightRL = findViewById(R.id.rightRect);
+
         fullscreenBtn = findViewById(R.id.toggleFullscreenModeBtn);
         fullscreenModeSpinner = findViewById(R.id.fullscreenModeSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.fullscreen_modes, android.R.layout.simple_spinner_dropdown_item);
         fullscreenModeSpinner.setAdapter(adapter);
         fullscreenStatus = findViewById(R.id.fullscreenStatusImageView);
+
+        mScrollView = findViewById(R.id.mScrollView);
+        mScrollView.post(() -> mScrollView.fullScroll(ScrollView.FOCUS_DOWN));
         decorView = getWindow().getDecorView();
+        insetsTV = findViewById(R.id.insetsLogsTV);
 
         isAPI30 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
         controller = isAPI30 ? parentView.getWindowInsetsController() : null;
+
+        getSupportActionBar().hide();
     }
 
     @Override
@@ -141,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else {
                 //true - if apps want the Decor to handle system window fit
-                window.setDecorFitsSystemWindows(true);
+                window.setDecorFitsSystemWindows(true); // if this is true, "sticky immersive" doesn't send insets changes to the listener. needs to be false too in this case
 
                 // Type.systemBars() --> All system bars. Includes statusBars(), navigationBars() and captionBar(). But not ime().
                 controller.show(WindowInsets.Type.systemBars());
@@ -181,6 +192,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logInsets(WindowInsets windowInsets) {
+        StringBuilder sb = new StringBuilder(insetsTV.getText());
+        sb.append("systemBars: " + windowInsets.getInsets(WindowInsets.Type.systemBars()))
+                .append("\nnavigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()))
+                .append("\nstatusBars: " + windowInsets.getInsets(WindowInsets.Type.statusBars()))
+                .append("\nnavigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()))
+                .append("\nime: " + windowInsets.getInsets(WindowInsets.Type.ime()))
+                .append("\ncaptionBar: " + windowInsets.getInsets(WindowInsets.Type.captionBar()))
+                .append("\ndisplayCutout: " + windowInsets.getInsets(WindowInsets.Type.displayCutout()))
+                .append("\nmandatorySystemGestures: " + windowInsets.getInsets(WindowInsets.Type.mandatorySystemGestures()))
+                .append("\nsystemGestures: " + windowInsets.getInsets(WindowInsets.Type.systemGestures()))
+                .append("\ntappableElement: " + windowInsets.getInsets(WindowInsets.Type.tappableElement()))
+                .append("\n------------------------------------------------------------------------------\n");
+        insetsTV.setText(sb.toString());
+
         Log.d(TAG, "systemBars: " + windowInsets.getInsets(WindowInsets.Type.systemBars()));
         Log.d(TAG, "navigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()));
         Log.d(TAG, "statusBars: " + windowInsets.getInsets(WindowInsets.Type.statusBars()));
