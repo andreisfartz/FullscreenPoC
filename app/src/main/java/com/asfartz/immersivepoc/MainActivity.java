@@ -3,14 +3,14 @@ package com.asfartz.immersivepoc;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.graphics.Color;
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -21,47 +21,56 @@ import android.widget.Toast;
 /**
  * Created by Andrei Sfartz on Mar, 2021
  */
+@SuppressLint("NewApi")
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
+
     private Button fullscreenBtn;
-    private ConstraintLayout parentCL;
+    private ConstraintLayout parentView;
     private ImageView fullscreenStatus;
     private RelativeLayout topRL, bottomRL, leftRL, rightRL;
     private Spinner fullscreenModeSpinner;
+    private View decorView;
 
-    boolean isAPI30 = false;
-    boolean isFullscreen = false;
+    private boolean isAPI30 = false;
+    private boolean isFullscreen = false;
     private WindowInsetsController controller;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        parentCL = findViewById(R.id.parentCL);
-        topRL = findViewById(R.id.topRL);
-        bottomRL = findViewById(R.id.bottomRL);
-        leftRL = findViewById(R.id.leftRL);
-        rightRL = findViewById(R.id.rightRL);
+    private void initViews() {
+        parentView = findViewById(R.id.parentLayout);
+        topRL = findViewById(R.id.topRect);
+        bottomRL = findViewById(R.id.bottomRect);
+        leftRL = findViewById(R.id.leftRect);
+        rightRL = findViewById(R.id.rightRect);
         fullscreenBtn = findViewById(R.id.toggleFullscreenModeBtn);
         fullscreenModeSpinner = findViewById(R.id.fullscreenModeSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.fullscreen_modes, android.R.layout.simple_spinner_dropdown_item);
         fullscreenModeSpinner.setAdapter(adapter);
         fullscreenStatus = findViewById(R.id.fullscreenStatusImageView);
-
+        decorView = getWindow().getDecorView();
 
         isAPI30 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
-        controller = isAPI30 ? parentCL.getWindowInsetsController() : null;
+        controller = isAPI30 ? parentView.getWindowInsetsController() : null;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initViews();
 
         fullscreenBtn.setOnClickListener(v -> {
             toggleFullscreenMode(isFullscreen);
         });
 
+        //
         if (isAPI30) {
-            // Why does this make the app bar transparent, instead of dark (like the app theme is set)
-            getWindow().getDecorView().setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            // Why does using decorView.setOnApplyWindowInsetsListener(...) make the app bar transparent, instead of what the app theme tells it to be
+            parentView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
                 public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                    logInsets(insets);
                     if (insets.isVisible(/*WindowInsets.Type.systemBars()*/
                             WindowInsets.Type.navigationBars() | WindowInsets.Type.statusBars())) {
 
@@ -69,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                         isFullscreen = false;
                         setEnableSpinner(true);
                         fullscreenStatus.setImageResource(R.drawable.ic_red_not_fullscreen);
-                        parentCL.setPadding(0, insets.getInsets(WindowInsets.Type.systemBars()).top, 0, insets.getInsets(WindowInsets.Type.systemBars()).bottom);
+                        parentView.setPadding(0, insets.getInsets(WindowInsets.Type.systemBars()).top, 0, insets.getInsets(WindowInsets.Type.systemBars()).bottom);
                     } else {
 
                         // Not fullscreen, the system bars are visible.
@@ -81,17 +90,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } else {
-            getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            parentView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
                 @Override
                 public void onSystemUiVisibilityChange(int visibility) {
                     if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-
                         // Not fullscreen, the system bars are visible.
                         isFullscreen = false;
                         setEnableSpinner(true);
                         fullscreenStatus.setImageResource(R.drawable.ic_red_not_fullscreen);
                     } else {
-
                         // Fullscreen, The system bars are NOT visible.
                         isFullscreen = true;
                         setEnableSpinner(false);
@@ -104,12 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void setEnableSpinner(boolean enable) {
-        fullscreenModeSpinner.setEnabled(enable);
-        fullscreenModeSpinner.setClickable(enable);
-    }
-
-
     private void toggleFullscreenMode(boolean fullscreenMode) {
         String selectedValue = (String) fullscreenModeSpinner.getSelectedItem();
 
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             Window window = getWindow();
             if (!fullscreenMode) {
                 // false = don't let DecorView handle WindowInsets automatically, we will handle it
-                window.setDecorFitsSystemWindows(true);
+                window.setDecorFitsSystemWindows(false);
 
                 controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
                 switch (selectedValue) {
@@ -172,6 +173,24 @@ public class MainActivity extends AppCompatActivity {
                 decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
             }
         }
+    }
+
+    private void setEnableSpinner(boolean enable) {
+        fullscreenModeSpinner.setEnabled(enable);
+        fullscreenModeSpinner.setClickable(enable);
+    }
+
+    private void logInsets(WindowInsets windowInsets) {
+        Log.d(TAG, "systemBars: " + windowInsets.getInsets(WindowInsets.Type.systemBars()));
+        Log.d(TAG, "navigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()));
+        Log.d(TAG, "statusBars: " + windowInsets.getInsets(WindowInsets.Type.statusBars()));
+        Log.d(TAG, "ime: " + windowInsets.getInsets(WindowInsets.Type.ime()));
+        Log.d(TAG, "captionBar: " + windowInsets.getInsets(WindowInsets.Type.captionBar()));
+        Log.d(TAG, "displayCutout: " + windowInsets.getInsets(WindowInsets.Type.displayCutout()));
+        Log.d(TAG, "mandatorySystemGestures: " + windowInsets.getInsets(WindowInsets.Type.mandatorySystemGestures()));
+        Log.d(TAG, "systemGestures: " + windowInsets.getInsets(WindowInsets.Type.systemGestures()));
+        Log.d(TAG, "tappableElement: " + windowInsets.getInsets(WindowInsets.Type.tappableElement()));
+        Log.d(TAG, "------------------------------------------------------------------------------");
     }
 
 }

@@ -2,14 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/parentCL"
+    android:id="@+id/parentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5BEFF"
     tools:context=".MainActivity">
 
     <RelativeLayout
-        android:id="@+id/topRL"
+        android:id="@+id/topRect"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginStart="50dp"
@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
-        android:id="@+id/bottomRL"
+        android:id="@+id/bottomRect"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginStart="50dp"
@@ -32,7 +32,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <RelativeLayout
-        android:id="@+id/leftRL"
+        android:id="@+id/leftRect"
         android:layout_width="50dp"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
@@ -45,7 +45,7 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/rightRL"
+        android:id="@+id/rightRect"
         android:layout_width="50dp"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
@@ -85,9 +85,9 @@
         android:text="FULLSCREEN MODE"
         android:textSize="30sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/rightRL"
+        app:layout_constraintEnd_toStartOf="@+id/rightRect"
         app:layout_constraintHorizontal_bias="0.475"
-        app:layout_constraintStart_toEndOf="@+id/leftRL"
+        app:layout_constraintStart_toEndOf="@+id/leftRect"
         app:layout_constraintTop_toBottomOf="@+id/fullscreenModeSpinner" />
 
     <ImageView
@@ -95,9 +95,9 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toStartOf="@+id/rightRL"
+        app:layout_constraintEnd_toStartOf="@+id/rightRect"
         app:layout_constraintHorizontal_bias="0.503"
-        app:layout_constraintStart_toEndOf="@+id/leftRL"
+        app:layout_constraintStart_toEndOf="@+id/leftRect"
         app:layout_constraintTop_toBottomOf="@+id/textView"
         app:srcCompat="@drawable/ic_red_not_fullscreen" />
 
