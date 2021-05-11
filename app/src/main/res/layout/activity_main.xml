@@ -11,7 +11,7 @@
     <RelativeLayout
         android:id="@+id/topRect"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_marginStart="50dp"
         android:layout_marginEnd="50dp"
         android:background="#800038FF"
@@ -22,7 +22,7 @@
     <RelativeLayout
         android:id="@+id/bottomRect"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_marginStart="50dp"
         android:layout_marginEnd="50dp"
         android:background="#80FF0000"
@@ -33,7 +33,7 @@
 
     <RelativeLayout
         android:id="@+id/leftRect"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
         android:layout_marginBottom="50dp"
@@ -46,7 +46,7 @@
 
     <RelativeLayout
         android:id="@+id/rightRect"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="match_parent"
         android:layout_marginTop="50dp"
         android:layout_marginBottom="50dp"
@@ -61,6 +61,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="0dp"
         android:text="Fullscreen mode "
+        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
@@ -81,23 +82,22 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
         android:text="FULLSCREEN MODE:"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/fullscreenStatusImageView"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toStartOf="@+id/rightRect"
+        app:layout_constraintHorizontal_bias="0.339"
         app:layout_constraintStart_toEndOf="@+id/leftRect"
         app:layout_constraintTop_toBottomOf="@+id/fullscreenModeSpinner" />
 
     <ImageView
         android:id="@+id/fullscreenStatusImageView"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        app:layout_constraintEnd_toStartOf="@+id/rightRect"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="-2dp"
+        app:layout_constraintBottom_toBottomOf="@+id/textView"
         app:layout_constraintStart_toEndOf="@+id/textView"
-        app:layout_constraintTop_toBottomOf="@+id/fullscreenModeSpinner"
         app:srcCompat="@drawable/ic_red_not_fullscreen" />
 
     <ScrollView
@@ -123,7 +123,8 @@
                 android:id="@+id/insetsLogsTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="11sp"
+                android:textColor="@color/black"
                 tools:text="xxx" />
 
 

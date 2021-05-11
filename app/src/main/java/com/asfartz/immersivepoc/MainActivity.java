@@ -1,5 +1,6 @@
 package com.asfartz.immersivepoc;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -18,7 +19,6 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * Created by Andrei Sfartz on Mar, 2021
@@ -37,11 +37,18 @@ public class MainActivity extends AppCompatActivity {
     private TextView insetsTV;
     private View decorView;
 
-    private boolean isAPI30 = false;
+    private boolean isMinAPI30 = false;
     private boolean isFullscreen = false;
     private WindowInsetsController controller;
 
     private void initViews() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            // if we don't do this, because we set setDecorFitsSystemWindows(false), the system will place the content/decor as it is, and the ActionBar will cover the content
+            // if it was setDecorFitsSystemWindows(true), the content/decor would've been placed to fit with the system windows ( = take their insets into account)
+            actionBar.hide();
+        }
+
         parentView = findViewById(R.id.parentLayout);
         topRL = findViewById(R.id.topRect);
         bottomRL = findViewById(R.id.bottomRect);
@@ -55,14 +62,11 @@ public class MainActivity extends AppCompatActivity {
         fullscreenStatus = findViewById(R.id.fullscreenStatusImageView);
 
         mScrollView = findViewById(R.id.mScrollView);
-        mScrollView.post(() -> mScrollView.fullScroll(ScrollView.FOCUS_DOWN));
         decorView = getWindow().getDecorView();
         insetsTV = findViewById(R.id.insetsLogsTV);
 
-        isAPI30 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
-        controller = isAPI30 ? parentView.getWindowInsetsController() : null;
-
-        getSupportActionBar().hide();
+        isMinAPI30 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
+        controller = isMinAPI30 ? parentView.getWindowInsetsController() : null;
     }
 
     @Override
@@ -75,66 +79,76 @@ public class MainActivity extends AppCompatActivity {
             toggleFullscreenMode(isFullscreen);
         });
 
-        //
-        if (isAPI30) {
-            // Why does using decorView.setOnApplyWindowInsetsListener(...) make the app bar transparent, instead of what the app theme tells it to be
+        if (isMinAPI30) {
+            // With stick immersive, you cannot receive a callback when the system UI visibility changes.
+            // So if you want the auto-hiding behavior of sticky immersive mode, but still want to know when the system UI re-appears
+            // in order to show your own UI controls as well, use the regular IMMERSIVE flag and use Handler.postDelayed()
+            // or something similar to re-enter immersive mode after a few seconds.
+
+            // Why does using decorView.setOnApplyWindowInsetsListener(...) make the system bars transparent, instead of what the app theme tells it to be?
+            // It's initially colored according to the theme, then it becomes transparent. WTF ???
+            // Conclusion: DON't apply WindowInsetsListener to DecorView, I guess...
             parentView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override
                 public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
                     logInsets(insets);
-                    if (insets.isVisible(/*WindowInsets.Type.systemBars()*/
-                            WindowInsets.Type.navigationBars() | WindowInsets.Type.statusBars())) {
 
-                        // Fullscreen, the system bars are not visible.
-                        isFullscreen = false;
-                        setEnableSpinner(true);
-                        fullscreenStatus.setImageResource(R.drawable.ic_red_not_fullscreen);
-                        parentView.setPadding(0, insets.getInsets(WindowInsets.Type.systemBars()).top, 0, insets.getInsets(WindowInsets.Type.systemBars()).bottom);
-                    } else {
-
+                    // While in Lean Back mode, clicking anywhere will reveal ONLY the navigation bar, we have to manually drag the status bar to make it appear
+                    if (insets.isVisible(WindowInsets.Type.navigationBars()) || insets.isVisible(WindowInsets.Type.statusBars())) {
                         // Not fullscreen, the system bars are visible.
+                        enableSpinner(true);
+                        isFullscreen = false;
+                        fullscreenStatus.setImageResource(R.drawable.ic_red_not_fullscreen);
+                        parentView.setPadding(
+                                0, insets.getInsets(WindowInsets.Type.systemBars()).top,
+                                0, insets.getInsets(WindowInsets.Type.systemBars()).bottom);
+                    } else {
+                        // Fullscreen, the system bars are not visible.
+                        enableSpinner(false);
                         isFullscreen = true;
-                        setEnableSpinner(false);
                         fullscreenStatus.setImageResource(R.drawable.ic_green_fullscreen);
+                        parentView.setPadding(
+                                0, insets.getInsets(WindowInsets.Type.systemBars()).top,
+                                0, insets.getInsets(WindowInsets.Type.systemBars()).bottom);
                     }
                     return insets;
                 }
             });
+
         } else {
-            parentView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            /*parentView*/decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
                 @Override
                 public void onSystemUiVisibilityChange(int visibility) {
                     if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                        // Not fullscreen, the system bars are visible.
+                        // The system bars are visible. Activity is not fullscreen
                         isFullscreen = false;
-                        setEnableSpinner(true);
+                        enableSpinner(true);
                         fullscreenStatus.setImageResource(R.drawable.ic_red_not_fullscreen);
                     } else {
-                        // Fullscreen, The system bars are NOT visible.
+                        // The system bars are NOT visible. Activity is fullscreen
                         isFullscreen = true;
-                        setEnableSpinner(false);
+                        enableSpinner(false);
                         fullscreenStatus.setImageResource(R.drawable.ic_green_fullscreen);
                     }
                 }
             });
         }
 
-
     }
 
-    private void toggleFullscreenMode(boolean fullscreenMode) {
+    private void toggleFullscreenMode(boolean isCurrentlyFullscreen) {
         String selectedValue = (String) fullscreenModeSpinner.getSelectedItem();
 
-        if (isAPI30) {
-            // API level 30+
+        if (isMinAPI30) {
+            // >= API30
             Window window = getWindow();
-            if (!fullscreenMode) {
+            if (!isCurrentlyFullscreen) {
                 // false = don't let DecorView handle WindowInsets automatically, we will handle it
                 window.setDecorFitsSystemWindows(false);
 
                 controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
                 switch (selectedValue) {
-                    // default option. System bars will be forcibly shown on any user interaction on the corresponding display
+                    // Default option. System bars will be forcibly shown on any user interaction on the corresponding display
                     case "Lean back":
                         controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_BARS_BY_TOUCH);
                         break;
@@ -151,8 +165,19 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
             } else {
-                //true - if apps want the Decor to handle system window fit
-                window.setDecorFitsSystemWindows(true); // if this is true, "sticky immersive" doesn't send insets changes to the listener. needs to be false too in this case
+                // true - if apps want the Decor to fit 'properly with the system windows ( = to be inseted by it)
+                // false - place the decor 'as is', and allow it to handle the system windows insets
+
+                window.setDecorFitsSystemWindows(false);
+                // NOTE: if above line is set to true, "sticky immersive" doesn't send insets changes to the listener. needs to be false in this case. Why???
+
+                // Answer: https://developer.android.com/training/system-ui/immersive
+                // With stick immersive, you cannot receive a callback when the system UI visibility changes.
+                // So if you want the auto-hiding behavior of sticky immersive mode, but still want to know when the system UI re-appears
+                // in order to show your own UI controls as well, use the regular IMMERSIVE flag and use Handler.postDelayed()
+                // or something similar to re-enter immersive mode after a few seconds.
+
+                // Despite the above answer, it doesn't seem to be the true on API 30
 
                 // Type.systemBars() --> All system bars. Includes statusBars(), navigationBars() and captionBar(). But not ime().
                 controller.show(WindowInsets.Type.systemBars());
@@ -161,21 +186,25 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // API level < 30
             final View decorView = getWindow().getDecorView();
-            if (!fullscreenMode) {
-
+            if (!isCurrentlyFullscreen) {
                 // WindowInsets cover status bar, navigation bar, keyboard when its open
                 // View.SYSTEM_UI_FLAG_LAYOUT_STABLE    --> Use WindowInsets.getInsetsIgnoringVisibility(int) instead to retrieve insets that don't change when system bars change visibility state.
                 // View.SYSTEM_UI_FLAG_FULLSCREEN       --> Use WindowInsetsController.hide(int) with WindowInsets.Type.statusBars()
                 // View.SYSTEM_UI_FLAG_HIDE_NAVIGATION  --> Use WindowInsetsController.hide(int) with WindowInsets.Type.navigationBars()
                 // View.SYSTEM_UI_FLAG_IMMERSIVE        --> Use WindowInsetsController.BEHAVIOR_SHOW_BARS_BY_SWIPE
                 // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY --> WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
                 switch (selectedValue) {
                     case "Lean back":
+                        // Default option. System bars will be forcibly shown on any user interaction on the corresponding display
                         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
                         break;
                     case "Immersive":
+                        // System bars will be revealed with system gestures, such as swiping from the edge of the screen where the bar is hidden from.
                         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
                         break;
+                    // System bars can be revealed temporarily with system gestures, such as swiping from the edge of the screen where the bar is hidden from.
+                    // Will overlay app's content, may have some degree of transparency, and will automatically hide after a short timeout.
                     case "Sticky Immersive":
                         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
                         break;
@@ -186,36 +215,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setEnableSpinner(boolean enable) {
+    private void enableSpinner(boolean enable) {
         fullscreenModeSpinner.setEnabled(enable);
         fullscreenModeSpinner.setClickable(enable);
     }
 
     private void logInsets(WindowInsets windowInsets) {
         StringBuilder sb = new StringBuilder(insetsTV.getText());
-        sb.append("systemBars: " + windowInsets.getInsets(WindowInsets.Type.systemBars()))
-                .append("\nnavigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()))
-                .append("\nstatusBars: " + windowInsets.getInsets(WindowInsets.Type.statusBars()))
-                .append("\nnavigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()))
-                .append("\nime: " + windowInsets.getInsets(WindowInsets.Type.ime()))
-                .append("\ncaptionBar: " + windowInsets.getInsets(WindowInsets.Type.captionBar()))
-                .append("\ndisplayCutout: " + windowInsets.getInsets(WindowInsets.Type.displayCutout()))
-                .append("\nmandatorySystemGestures: " + windowInsets.getInsets(WindowInsets.Type.mandatorySystemGestures()))
-                .append("\nsystemGestures: " + windowInsets.getInsets(WindowInsets.Type.systemGestures()))
-                .append("\ntappableElement: " + windowInsets.getInsets(WindowInsets.Type.tappableElement()))
+        sb.append("\nsystemBars: ").append(windowInsets.getInsets(WindowInsets.Type.systemBars()))
+                .append("\nnavigationBars: ").append(windowInsets.getInsets(WindowInsets.Type.navigationBars()))
+                .append("\nstatusBars: ").append(windowInsets.getInsets(WindowInsets.Type.statusBars()))
+                .append("\nnavigationBars: ").append(windowInsets.getInsets(WindowInsets.Type.navigationBars()))
+                .append("\ncaptionBar: ").append(windowInsets.getInsets(WindowInsets.Type.captionBar()))
+                .append("\nime: ").append(windowInsets.getInsets(WindowInsets.Type.ime()))
+                .append("\ndisplayCutout: ").append(windowInsets.getInsets(WindowInsets.Type.displayCutout()))
+                .append("\nmandatorySystemGestures: ").append(windowInsets.getInsets(WindowInsets.Type.mandatorySystemGestures()))
+                .append("\nsystemGestures: ").append(windowInsets.getInsets(WindowInsets.Type.systemGestures()))
+                .append("\ntappableElement: ").append(windowInsets.getInsets(WindowInsets.Type.tappableElement()))
                 .append("\n------------------------------------------------------------------------------\n");
         insetsTV.setText(sb.toString());
-
-        Log.d(TAG, "systemBars: " + windowInsets.getInsets(WindowInsets.Type.systemBars()));
-        Log.d(TAG, "navigationBars: " + windowInsets.getInsets(WindowInsets.Type.navigationBars()));
-        Log.d(TAG, "statusBars: " + windowInsets.getInsets(WindowInsets.Type.statusBars()));
-        Log.d(TAG, "ime: " + windowInsets.getInsets(WindowInsets.Type.ime()));
-        Log.d(TAG, "captionBar: " + windowInsets.getInsets(WindowInsets.Type.captionBar()));
-        Log.d(TAG, "displayCutout: " + windowInsets.getInsets(WindowInsets.Type.displayCutout()));
-        Log.d(TAG, "mandatorySystemGestures: " + windowInsets.getInsets(WindowInsets.Type.mandatorySystemGestures()));
-        Log.d(TAG, "systemGestures: " + windowInsets.getInsets(WindowInsets.Type.systemGestures()));
-        Log.d(TAG, "tappableElement: " + windowInsets.getInsets(WindowInsets.Type.tappableElement()));
-        Log.d(TAG, "------------------------------------------------------------------------------");
+        mScrollView.post(() -> mScrollView.fullScroll(View.FOCUS_DOWN));
+        Log.d(TAG, sb.toString());
     }
-
 }

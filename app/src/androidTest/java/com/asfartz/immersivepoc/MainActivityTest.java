@@ -3,19 +3,22 @@ package com.asfartz.immersivepoc;
 import androidx.test.rule.ActivityTestRule;
 
 import org.junit.Before;
+import org.junit.Rule;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by Andrei Sfartz on Mar, 2021
- */
 public class MainActivityTest {
 
+    @Rule
     ActivityTestRule<MainActivity> mainActivityTestRule =
-            new ActivityTestRule<>(MainActivity.class, true, false);
+            new ActivityTestRule<>(MainActivity.class, true, true);
 
     @Before
     public void setUp() throws Exception {
+    }
+
+    public void testViewsWhenNotFullscreen() {
+
     }
 
 
